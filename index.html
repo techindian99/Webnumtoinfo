@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#070b10" />
+  <meta name="description" content="NEXUS Signal Lab — privacy-first phone intelligence education console." />
+  <title>NEXUS // Signal Lab</title>
+  <style>
+    :root {
+      --bg: #070b10;
+      --panel: #0c1219;
+      --panel-2: #101923;
+      --panel-3: #131f2b;
+      --line: rgba(163, 187, 206, 0.14);
+      --line-strong: rgba(163, 187, 206, 0.24);
+      --text: #eef6fb;
+      --muted: #8295a6;
+      --muted-2: #5c6d7d;
+      --cyan: #62e7ff;
+      --cyan-2: #1cb7d9;
+      --green: #82f7b2;
+      --yellow: #ffd66b;
+      --red: #ff718d;
+      --violet: #ae9cff;
+      --shadow: 0 24px 70px rgba(0,0,0,.32);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 76% -12%, rgba(40, 144, 171, .14), transparent 30rem),
+        radial-gradient(circle at 20% 0%, rgba(128, 106, 255, .07), transparent 25rem),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .mono, code, .eyebrow, .nav-kicker, .metric-value, .result-value, .chip, .system-status, .data-label { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+
+    .app-shell { display: flex; min-height: 100vh; }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      width: 258px;
+      height: 100vh;
+      flex: 0 0 258px;
+      padding: 26px 18px 18px;
+      border-right: 1px solid var(--line);
+      background: rgba(7, 12, 17, .82);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 2px 10px 28px; }
+    .brand-mark {
+      display: grid; place-items: center; width: 38px; height: 38px;
+      border: 1px solid rgba(98, 231, 255, .6); border-radius: 12px;
+      color: var(--cyan); background: rgba(98, 231, 255, .08);
+      box-shadow: 0 0 24px rgba(98, 231, 255, .1), inset 0 0 20px rgba(98, 231, 255, .05);
+    }
+    .brand-mark svg { width: 21px; height: 21px; }
+    .brand-title { font-size: 14px; font-weight: 800; letter-spacing: .15em; }
+    .brand-sub { color: var(--muted); font-size: 9px; letter-spacing: .15em; margin-top: 3px; }
+    .nav-kicker { padding: 0 11px 10px; color: var(--muted-2); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+    .nav { display: grid; gap: 5px; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 12px;
+      border: 1px solid transparent; border-radius: 13px; color: var(--muted); font-size: 13px; transition: .2s ease;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--text); border-color: rgba(98, 231, 255, .17); background: rgba(98, 231, 255, .07); }
+    .nav-link.active { box-shadow: inset 3px 0 var(--cyan); }
+    .nav-icon { display: grid; place-items: center; width: 20px; color: currentColor; }
+    .nav-icon svg { width: 17px; height: 17px; }
+    .sidebar-bottom { margin-top: auto; }
+    .learning-card { padding: 15px; border: 1px solid var(--line); border-radius: 17px; background: linear-gradient(145deg, rgba(174,156,255,.1), rgba(98,231,255,.03)); }
+    .learning-card .tiny { color: var(--violet); font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+    .learning-card h4 { margin: 9px 0 6px; font-size: 13px; }
+    .learning-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .progress { height: 4px; margin-top: 14px; overflow: hidden; border-radius: 10px; background: rgba(255,255,255,.08); }
+    .progress span { display: block; width: 64%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--violet), var(--cyan)); }
+    .sidebar-status { display: flex; align-items: center; gap: 7px; margin: 17px 11px 0; color: var(--muted-2); font: 10px "SFMono-Regular", Consolas, monospace; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 11px var(--green); }
+
+    .main { width: calc(100% - 258px); min-width: 0; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; min-height: 76px; padding: 0 42px; border-bottom: 1px solid var(--line); }
+    .breadcrumbs { color: var(--muted); font-size: 12px; }
+    .breadcrumbs strong { color: var(--text); font-weight: 600; }
+    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .system-status { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border: 1px solid rgba(130,247,178,.18); border-radius: 999px; color: var(--green); background: rgba(130,247,178,.055); font-size: 10px; }
+    .help-button { display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); background: transparent; }
+    .help-button:hover { color: var(--text); border-color: var(--line-strong); }
+
+    .page { max-width: 1440px; margin: 0 auto; padding: 43px 42px 60px; }
+    .hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; margin-bottom: 30px; }
+    .eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; color: var(--cyan); font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 23px; height: 1px; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+    h1 { max-width: 670px; margin: 0; font-size: clamp(2.25rem, 4.5vw, 4.3rem); line-height: .99; letter-spacing: -.065em; font-weight: 750; }
+    h1 span { color: var(--cyan); }
+    .hero-copy { max-width: 650px; margin: 18px 0 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .hero-meta { display: grid; justify-items: end; gap: 9px; padding-bottom: 3px; }
+    .meta-label { color: var(--muted-2); font: 9px "SFMono-Regular", Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
+    .scan-id { color: var(--muted); font: 11px "SFMono-Regular", Consolas, monospace; }
+    .scan-id b { color: var(--text); font-weight: 600; }
+
+    .search-panel { position: relative; padding: 22px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: linear-gradient(135deg, rgba(20, 36, 49, .9), rgba(9, 15, 22, .9)); box-shadow: var(--shadow); overflow: hidden; }
+    .search-panel::after { content: ""; position: absolute; right: -90px; bottom: -140px; width: 380px; height: 270px; border: 1px solid rgba(98, 231, 255, .1); border-radius: 50%; transform: rotate(-24deg); pointer-events: none; }
+    .search-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 15px; }
+    .section-title { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 13px; font-weight: 650; letter-spacing: .01em; }
+    .section-title svg { color: var(--cyan); }
+    .mode-label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 10px; }
+    select, .phone-input { color: var(--text); border: 1px solid var(--line-strong); background: rgba(4, 8, 12, .62); outline: 0; transition: .2s ease; }
+    select:focus, .phone-input:focus { border-color: rgba(98,231,255,.7); box-shadow: 0 0 0 3px rgba(98,231,255,.09); }
+    select { min-height: 34px; padding: 0 10px; border-radius: 9px; font-size: 11px; }
+    .search-row { display: flex; gap: 10px; }
+    .input-wrap { position: relative; flex: 1; }
+    .input-prefix { position: absolute; left: 15px; top: 50%; color: var(--muted-2); transform: translateY(-50%); font: 16px "SFMono-Regular", Consolas, monospace; pointer-events: none; }
+    .phone-input { width: 100%; height: 56px; padding: 0 17px 0 39px; border-radius: 13px; font-size: 16px; letter-spacing: .02em; }
+    .phone-input::placeholder { color: #526270; }
+    .scan-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 150px; padding: 0 22px; border: 0; border-radius: 13px; color: #051016; background: linear-gradient(135deg, #9af7ff, #4ed9ee); font-size: 13px; font-weight: 750; box-shadow: 0 12px 30px rgba(38, 205, 231, .18); transition: transform .2s ease, box-shadow .2s ease; }
+    .scan-button:hover { transform: translateY(-2px); box-shadow: 0 16px 32px rgba(38, 205, 231, .28); }
+    .scan-button:disabled { cursor: wait; opacity: .72; transform: none; }
+    .scan-button svg { width: 17px; height: 17px; }
+    .scan-button.loading svg { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .query-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 13px; }
+    .query-note { color: var(--muted-2); font: 10px "SFMono-Regular", Consolas, monospace; }
+    .query-note .live-word { color: var(--yellow); }
+    .sample-chips { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+    .sample-label { color: var(--muted-2); font: 10px "SFMono-Regular", Consolas, monospace; }
+    .chip { padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: rgba(255,255,255,.025); font-size: 10px; transition: .2s ease; }
+    .chip:hover { color: var(--cyan); border-color: rgba(98,231,255,.36); background: rgba(98,231,255,.06); }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; margin: 18px 0; }
+    .metric-card { min-height: 118px; padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: rgba(13, 20, 28, .72); }
+    .metric-top { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 11px; }
+    .metric-icon { color: var(--cyan); }
+    .metric-value { display: block; margin: 15px 0 9px; color: var(--text); font-size: 24px; font-weight: 600; letter-spacing: -.06em; }
+    .metric-value.waiting { color: var(--muted-2); }
+    .metric-foot { color: var(--muted-2); font-size: 10px; }
+    .metric-foot.good { color: var(--green); }
+
+    .results-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 31px 0 13px; }
+    .results-heading .section-title { font-size: 16px; }
+    .result-count { padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font: 10px "SFMono-Regular", Consolas, monospace; }
+    .results-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, .82fr); gap: 15px; }
+    .card { border: 1px solid var(--line); border-radius: var(--radius); background: rgba(12, 19, 27, .76); overflow: hidden; }
+    .card-pad { padding: 21px; }
+    .result-main { min-height: 326px; }
+    .result-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 19px; border-bottom: 1px solid var(--line); }
+    .number-eyebrow { margin: 0 0 7px; color: var(--muted-2); font: 10px "SFMono-Regular", Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
+    .number-display { margin: 0; color: var(--text); font: 600 clamp(1.4rem, 3vw, 2rem) "SFMono-Regular", Consolas, monospace; letter-spacing: -.06em; }
+    .verified-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid rgba(130,247,178,.22); border-radius: 8px; color: var(--green); background: rgba(130,247,178,.07); font: 10px "SFMono-Regular", Consolas, monospace; white-space: nowrap; }
+    .verified-badge.warn { color: var(--yellow); border-color: rgba(255,214,107,.25); background: rgba(255,214,107,.06); }
+    .verified-badge svg { width: 13px; height: 13px; }
+    .result-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 35px; padding-top: 7px; }
+    .data-row { display: flex; justify-content: space-between; gap: 14px; padding: 13px 0; border-bottom: 1px solid rgba(163,187,206,.09); }
+    .data-label { color: var(--muted-2); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    .data-value { max-width: 62%; color: var(--text); font-size: 12px; text-align: right; }
+    .data-value.accent { color: var(--cyan); }
+    .data-value.good { color: var(--green); }
+    .data-value.muted { color: var(--muted); }
+
+    .insight-card { min-height: 326px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 19px 21px; border-bottom: 1px solid var(--line); }
+    .card-header .section-title { font-size: 12px; }
+    .card-header-note { color: var(--muted-2); font: 9px "SFMono-Regular", Consolas, monospace; }
+    .risk-body { display: grid; grid-template-columns: 160px 1fr; gap: 22px; align-items: center; padding: 22px; }
+    .gauge { position: relative; display: grid; place-items: center; width: 151px; height: 151px; border-radius: 50%; background: conic-gradient(var(--green) var(--score, 8%), rgba(255,255,255,.08) 0); transform: rotate(-35deg); }
+    .gauge::before { content: ""; position: absolute; inset: 12px; border-radius: 50%; background: var(--panel); box-shadow: inset 0 0 20px rgba(0,0,0,.35); }
+    .gauge-content { position: relative; z-index: 1; text-align: center; transform: rotate(35deg); }
+    .gauge-score { display: block; font: 600 30px "SFMono-Regular", Consolas, monospace; letter-spacing: -.1em; }
+    .gauge-label { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .risk-copy h3 { margin: 0 0 7px; font-size: 17px; }
+    .risk-copy p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .risk-legend { display: flex; align-items: center; gap: 10px; margin-top: 17px; color: var(--muted-2); font: 9px "SFMono-Regular", Consolas, monospace; }
+    .risk-legend span { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px currentColor; }
+    .risk-legend span.mid { margin-left: 5px; background: var(--yellow); }
+    .risk-legend span.high { margin-left: 5px; background: var(--red); }
+    .privacy-callout { display: flex; gap: 10px; margin: 2px 22px 21px; padding: 12px; border: 1px solid rgba(174,156,255,.16); border-radius: 12px; color: #bcb2ef; background: rgba(174,156,255,.055); font-size: 10px; line-height: 1.5; }
+    .privacy-callout svg { flex: 0 0 auto; color: var(--violet); }
+
+    .lower-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 15px; margin-top: 15px; }
+    .metadata-list { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding: 19px 21px 21px; background: rgba(255,255,255,.02); }
+    .metadata-item { min-height: 67px; padding: 12px; border: 1px solid var(--line); background: rgba(9,15,22,.65); }
+    .metadata-item:first-child { border-radius: 12px 0 0 0; }
+    .metadata-item:nth-child(2) { border-radius: 0 12px 0 0; }
+    .metadata-item:nth-last-child(2) { border-radius: 0 0 0 12px; }
+    .metadata-item:last-child { border-radius: 0 0 12px 0; }
+    .metadata-item .data-label { display: block; margin-bottom: 8px; }
+    .metadata-item .data-value { max-width: none; display: block; text-align: left; }
+    .activity-body { padding: 21px; }
+    .activity-row { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; }
+    .activity-row:last-child { margin-bottom: 0; }
+    .activity-time { width: 39px; color: var(--muted-2); font: 9px "SFMono-Regular", Consolas, monospace; }
+    .activity-bar-wrap { flex: 1; }
+    .activity-bar-label { display: flex; justify-content: space-between; margin-bottom: 7px; color: var(--muted); font-size: 10px; }
+    .activity-bar-label strong { color: var(--text); font: 10px "SFMono-Regular", Consolas, monospace; }
+    .bar-track { height: 5px; overflow: hidden; border-radius: 8px; background: rgba(255,255,255,.07); }
+    .bar-fill { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--cyan-2), var(--cyan)); box-shadow: 0 0 12px rgba(98,231,255,.28); }
+
+    .education-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 17px; margin-top: 15px; padding: 19px 21px; border: 1px solid rgba(130,247,178,.16); border-radius: var(--radius); background: linear-gradient(100deg, rgba(130,247,178,.055), rgba(98,231,255,.025)); }
+    .edu-icon { display: grid; place-items: center; width: 39px; height: 39px; border: 1px solid rgba(130,247,178,.25); border-radius: 12px; color: var(--green); background: rgba(130,247,178,.06); }
+    .education-strip h3 { margin: 0 0 5px; font-size: 12px; }
+    .education-strip p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .edu-link { color: var(--green); font: 10px "SFMono-Regular", Consolas, monospace; white-space: nowrap; }
+    .edu-link:hover { text-decoration: underline; }
+
+    .api-card { margin-top: 15px; padding: 21px; border: 1px dashed rgba(98,231,255,.24); border-radius: var(--radius); background: rgba(98,231,255,.025); }
+    .api-card-top { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .api-card h3 { margin: 0 0 5px; font-size: 13px; }
+    .api-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .api-pill { padding: 7px 9px; border: 1px solid rgba(255,214,107,.22); border-radius: 8px; color: var(--yellow); background: rgba(255,214,107,.05); font: 9px "SFMono-Regular", Consolas, monospace; white-space: nowrap; }
+    .api-code { display: block; margin-top: 15px; padding: 13px 15px; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; color: #aac4d1; background: rgba(0,0,0,.25); font: 10px/1.7 "SFMono-Regular", Consolas, monospace; white-space: pre-wrap; }
+    .api-code b { color: var(--cyan); font-weight: 500; }
+    .api-note { margin-top: 11px !important; color: var(--muted-2) !important; }
+
+    .empty-state { display: grid; place-items: center; min-height: 270px; padding: 35px; text-align: center; }
+    .empty-orbit { position: relative; display: grid; place-items: center; width: 75px; height: 75px; margin-bottom: 18px; border: 1px solid rgba(98,231,255,.25); border-radius: 50%; color: var(--cyan); background: rgba(98,231,255,.04); }
+    .empty-orbit::before, .empty-orbit::after { content: ""; position: absolute; border: 1px solid rgba(98,231,255,.14); border-radius: 50%; }
+    .empty-orbit::before { inset: -11px; }
+    .empty-orbit::after { inset: 10px; border-color: rgba(98,231,255,.24); }
+    .empty-state h3 { margin: 0 0 7px; font-size: 16px; }
+    .empty-state p { max-width: 400px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .hidden { display: none !important; }
+    .skeleton { position: relative; overflow: hidden; min-height: 1em; border-radius: 5px; background: rgba(255,255,255,.07); color: transparent !important; }
+    .skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent); animation: shimmer 1.2s infinite; }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: 20; max-width: 360px; padding: 13px 15px; border: 1px solid rgba(98,231,255,.28); border-radius: 12px; color: var(--text); background: rgba(10, 19, 27, .94); box-shadow: var(--shadow); font-size: 11px; line-height: 1.45; transform: translateY(20px); opacity: 0; pointer-events: none; transition: .25s ease; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { border-color: rgba(255,113,141,.4); }
+    footer { padding-top: 28px; color: var(--muted-2); text-align: center; font: 10px/1.6 "SFMono-Regular", Consolas, monospace; }
+
+    @media (max-width: 1080px) {
+      .sidebar { width: 225px; flex-basis: 225px; }
+      .main { width: calc(100% - 225px); }
+      .topbar, .page { padding-left: 28px; padding-right: 28px; }
+      .results-grid, .lower-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .sidebar { position: fixed; left: -245px; width: 235px; flex-basis: auto; transition: .25s ease; box-shadow: 25px 0 50px rgba(0,0,0,.4); }
+      .sidebar.open { left: 0; }
+      .main { width: 100%; }
+      .topbar { padding: 0 19px; }
+      .page { padding: 31px 19px 45px; }
+      .hero { align-items: flex-start; flex-direction: column; }
+      .hero-meta { justify-items: start; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .search-row { flex-direction: column; }
+      .scan-button { min-height: 51px; }
+      .query-footer { align-items: flex-start; flex-direction: column; }
+      .sample-chips { justify-content: flex-start; }
+      .risk-body { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+      .risk-legend { justify-content: center; }
+      .result-columns { grid-template-columns: 1fr; }
+      .education-strip { grid-template-columns: auto 1fr; }
+      .edu-link { grid-column: 2; }
+      .menu-toggle { display: grid !important; }
+    }
+    @media (min-width: 761px) { .menu-toggle { display: none !important; } }
+    .menu-toggle { place-items: center; width: 33px; height: 33px; margin-right: 10px; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); background: transparent; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18M5.5 5.5l13 13M18.5 5.5l-13 13"/><circle cx="12" cy="12" r="3.5"/></svg></div>
+        <div><div class="brand-title">NEXUS</div><div class="brand-sub">SIGNAL LAB / EDU</div></div>
+      </div>
+      <div class="nav-kicker">Workspace</div>
+      <nav class="nav" aria-label="Main navigation">
+        <a class="nav-link active" href="#console"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M11 8h6M7 12h10M7 16h5"/></svg></span><span>Signal console</span></a>
+        <a class="nav-link" href="#education"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 9 9-5 9 5-9 5-9-5Z"/><path d="M7 11.5V16c2.4 2.5 7.6 2.5 10 0v-4.5M21 9v6"/></svg></span><span>Learn the signals</span></a>
+        <a class="nav-link" href="#api-setup"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 9 5 12l3 3M16 9l3 3-3 3M14 5l-4 14"/></svg></span><span>API setup</span></a>
+        <a class="nav-link" href="#privacy"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 5 6v5c0 4.5 2.8 8.1 7 10 4.2-1.9 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span>Privacy rules</span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="learning-card"><div class="tiny">Learning path 02</div><h4>Phone metadata 101</h4><p>Carrier, line type aur validation signals ko samjhiye.</p><div class="progress"><span></span></div></div>
+        <div class="sidebar-status"><span class="status-dot"></span> all systems nominal</div>
+      </div>
+    </aside>
+
+    <main class="main" id="console">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;"><button class="menu-toggle" id="menuToggle" aria-label="Open menu"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><div class="breadcrumbs"><span>Workspace</span><span aria-hidden="true"> / </span><strong>Signal console</strong></div></div>
+        <div class="top-actions"><div class="system-status"><span class="status-dot"></span> DEMO CORE ONLINE</div><button class="help-button" id="helpButton" aria-label="Show help">?</button></div>
+      </header>
+
+      <div class="page">
+        <section class="hero">
+          <div><div class="eyebrow">Educational intelligence interface</div><h1>Decode the <span>signal.</span><br>Learn what a number says.</h1><p class="hero-copy">A privacy-first phone metadata lab for students, builders and curious minds. Validate a number, understand the signal layers, and keep the human data boundary clear.</p></div>
+          <div class="hero-meta"><div class="meta-label">Current session</div><div class="scan-id">SESSION <b id="sessionId">NXS-••••••</b></div><div class="meta-label">Local time <span id="localTime">--:--</span></div></div>
+        </section>
+
+        <section class="search-panel" aria-labelledby="searchTitle">
+          <div class="search-heading"><h2 class="section-title" id="searchTitle"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>New signal query</h2><label class="mode-label" for="modeSelect">Mode <select id="modeSelect" aria-label="Query mode"><option value="demo">Demo / learning</option><option value="live">Live API</option></select></label></div>
+          <div class="search-row"><div class="input-wrap"><span class="input-prefix">+</span><input class="phone-input" id="phoneInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter number with country code  ·  e.g. 91 98765 43210" aria-label="Phone number" /></div><select id="countrySelect" aria-label="Country code"><option value="auto">Auto detect</option><option value="IN">India +91</option><option value="US">USA +1</option><option value="GB">UK +44</option><option value="AE">UAE +971</option><option value="AU">Australia +61</option></select><button class="scan-button" id="scanButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><span>Run analysis</span></button></div>
+          <div class="query-footer"><div class="query-note"><span class="live-word">●</span> <span id="modeNote">Privacy-safe simulation · no data leaves this browser</span></div><div class="sample-chips"><span class="sample-label">Try a sample</span><button class="chip" data-number="+91 98765 43210">+91 98765 43210</button><button class="chip" data-number="+1 202 555 0128">+1 202 555 0128</button><button class="chip" data-number="+44 20 7946 0958">+44 20 7946 0958</button></div></div>
+        </section>
+
+        <section class="metrics-grid" aria-label="Signal metrics">
+          <div class="metric-card"><div class="metric-top"><span>Validation confidence</span><span class="metric-icon">◈</span></div><strong class="metric-value waiting" id="metricConfidence">--</strong><div class="metric-foot" id="metricConfidenceFoot">Run a query to populate</div></div>
+          <div class="metric-card"><div class="metric-top"><span>Risk signal</span><span class="metric-icon">⌁</span></div><strong class="metric-value waiting" id="metricRisk">--</strong><div class="metric-foot" id="metricRiskFoot">No signal scanned</div></div>
+          <div class="metric-card"><div class="metric-top"><span>Carrier match</span><span class="metric-icon">⌁</span></div><strong class="metric-value waiting" id="metricCarrier">--</strong><div class="metric-foot" id="metricCarrierFoot">Awaiting metadata</div></div>
+          <div class="metric-card"><div class="metric-top"><span>Query latency</span><span class="metric-icon">◷</span></div><strong class="metric-value waiting" id="metricLatency">--</strong><div class="metric-foot" id="metricLatencyFoot">Console ready</div></div>
+        </section>
+
+        <div class="results-heading"><h2 class="section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 18V6M4 18h16"/><path d="m7 14 3-3 3 2 5-6"/></svg>Signal intelligence</h2><div class="result-count" id="resultCount">NO ACTIVE QUERY</div></div>
+
+        <section class="results-grid" aria-live="polite">
+          <article class="card result-main" id="overviewCard"><div class="empty-state" id="emptyOverview"><div class="empty-orbit"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></div><h3>Signal channel is open</h3><p>Number enter karke Run analysis dabaiye. Demo mode mein sirf privacy-safe telecom metadata dikhaya jayega.</p></div><div class="hidden" id="overviewContent"><div class="card-pad"><div class="result-top"><div><p class="number-eyebrow">Analysed identifier</p><h3 class="number-display" id="resultNumber">+--</h3></div><div class="verified-badge" id="verifiedBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg><span>VALIDATED</span></div></div><div class="result-columns"><div><div class="data-row"><span class="data-label">Country</span><strong class="data-value" id="resultCountry">--</strong></div><div class="data-row"><span class="data-label">Carrier</span><strong class="data-value accent" id="resultCarrier">--</strong></div><div class="data-row"><span class="data-label">Line type</span><strong class="data-value" id="resultLineType">--</strong></div></div><div><div class="data-row"><span class="data-label">Region signal</span><strong class="data-value" id="resultRegion">--</strong></div><div class="data-row"><span class="data-label">Timezone</span><strong class="data-value" id="resultTimezone">--</strong></div><div class="data-row"><span class="data-label">Source</span><strong class="data-value muted" id="resultSource">--</strong></div></div></div></div></div></article>
+
+          <article class="card insight-card"><div class="card-header"><h2 class="section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 5 6v5c0 4.5 2.8 8.1 7 10 4.2-1.9 7-5.5 7-10V6l-7-3Z"/><path d="M12 8v4M12 16h.01"/></svg>Signal risk index</h2><span class="card-header-note" id="riskUpdated">WAITING</span></div><div class="risk-body"><div class="gauge" id="riskGauge"><div class="gauge-content"><strong class="gauge-score" id="riskScore">--</strong><span class="gauge-label">risk index</span></div></div><div class="risk-copy"><h3 id="riskTitle">No scan yet</h3><p id="riskDescription">Risk index is a teaching signal based on validation consistency. It is not a verdict about a person or owner.</p><div class="risk-legend"><span></span> low <span class="mid"></span> review <span class="high"></span> high</div></div></div><div class="privacy-callout" id="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 5 6v5c0 4.5 2.8 8.1 7 10 4.2-1.9 7-5.5 7-10V6l-7-3Z"/><path d="M9 12h6"/></svg><span>Privacy boundary: owner name, address, live location, passwords ya private records yahan intentionally collect nahi hote.</span></div></article>
+        </section>
+
+        <section class="lower-grid">
+          <article class="card"><div class="card-header"><h2 class="section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>Metadata layer map</h2><span class="card-header-note">EDU / 04 LAYERS</span></div><div class="metadata-list"><div class="metadata-item"><span class="data-label">Format</span><strong class="data-value" id="metaFormat">--</strong></div><div class="metadata-item"><span class="data-label">Country code</span><strong class="data-value" id="metaCountryCode">--</strong></div><div class="metadata-item"><span class="data-label">National format</span><strong class="data-value" id="metaNational">--</strong></div><div class="metadata-item"><span class="data-label">Confidence</span><strong class="data-value good" id="metaConfidence">--</strong></div><div class="metadata-item"><span class="data-label">Provider status</span><strong class="data-value" id="metaStatus">--</strong></div><div class="metadata-item"><span class="data-label">Data boundary</span><strong class="data-value muted">Broad metadata only</strong></div></div></article>
+          <article class="card"><div class="card-header"><h2 class="section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5M4 19h16"/><path d="M7 15h2v2H7zM11 11h2v6h-2zM15 7h2v10h-2z"/></svg>Signal layers</h2><span class="card-header-note">LAST 24 HRS</span></div><div class="activity-body"><div class="activity-row"><span class="activity-time">01:00</span><div class="activity-bar-wrap"><div class="activity-bar-label"><span>Format integrity</span><strong id="barFormatValue">--</strong></div><div class="bar-track"><span class="bar-fill" id="barFormat" style="width:0%"></span></div></div></div><div class="activity-row"><span class="activity-time">06:00</span><div class="activity-bar-wrap"><div class="activity-bar-label"><span>Network match</span><strong id="barNetworkValue">--</strong></div><div class="bar-track"><span class="bar-fill" id="barNetwork" style="width:0%"></span></div></div></div><div class="activity-row"><span class="activity-time">12:00</span><div class="activity-bar-wrap"><div class="activity-bar-label"><span>Risk consistency</span><strong id="barRiskValue">--</strong></div><div class="bar-track"><span class="bar-fill" id="barRisk" style="width:0%"></span></div></div></div><div class="activity-row"><span class="activity-time">18:00</span><div class="activity-bar-wrap"><div class="activity-bar-label"><span>Source clarity</span><strong id="barSourceValue">--</strong></div><div class="bar-track"><span class="bar-fill" id="barSource" style="width:0%"></span></div></div></div></div></article>
+        </section>
+
+        <section class="education-strip" id="education"><div class="edu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m3 9 9-5 9 5-9 5-9-5Z"/><path d="M7 11.5V16c2.4 2.5 7.6 2.5 10 0v-4.5M21 9v6"/></svg></div><div><h3>Learn the boundary, not just the lookup</h3><p>Number validation telecom/network signal batata hai; kisi private individual ki identity prove nahi karta. Consent aur applicable law ke saath hi live data use karein.</p></div><a class="edu-link" href="#api-setup">VIEW API NOTES →</a></section>
+
+        <section class="api-card" id="api-setup"><div class="api-card-top"><div><h3>Live API setup</h3><p>Demo mode abhi bina key ke chal raha hai. Real telecom metadata ke liye aapko authorized provider key add karni hogi.</p></div><span class="api-pill">FRONT-END KEY WARNING</span></div><code class="api-code"><b>const LIVE_API_KEY</b> = <span id="apiKeyMask">""</span>;
+<b>const LIVE_API_BASE</b> = "https://phonevalidation.abstractapi.com/v1/";
+
+// index.html mein API CONFIG comment ke neeche apni key paste karein.
+// Mode dropdown se “Live API” select karke query run karein.</code><p class="api-note">Production website mein API key browser mein expose na karein — backend/serverless proxy use karein. Provider ki terms, consent aur local privacy law follow karna zaroori hai.</p></section>
+
+        <footer>NEXUS SIGNAL LAB · EDUCATIONAL UI · DEMO RESULTS ARE SIMULATED · BUILT FOR RESPONSIBLE LEARNING</footer>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /*
+     * NEXUS SIGNAL LAB
+     * Single-file educational phone metadata console.
+     * The demo mode never calls a server and returns synthetic, privacy-safe data.
+     */
+
+    // ================================================================
+    // API CONFIG — EDIT ONLY THESE TWO LINES FOR A LIVE LOOKUP
+    // ================================================================
+    const LIVE_API_KEY = "";
+    const LIVE_API_BASE = "https://phonevalidation.abstractapi.com/v1/";
+    // ================================================================
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+    const input = $("#phoneInput");
+    const countrySelect = $("#countrySelect");
+    const modeSelect = $("#modeSelect");
+    const scanButton = $("#scanButton");
+    const toast = $("#toast");
+    let toastTimer;
+    let lastResult = null;
+
+    const COUNTRY_DATA = {
+      IN: { name: "India", code: "+91", timezone: "Asia/Kolkata", regions: ["Jharkhand", "Maharashtra", "Karnataka", "Delhi NCR"], carriers: ["Jio", "Airtel", "Vi"], national: "09 8765 43210" },
+      US: { name: "United States", code: "+1", timezone: "America/New_York", regions: ["New York area", "California area", "Texas area", "Washington area"], carriers: ["T-Mobile", "AT&T", "Verizon"], national: "(202) 555-0128" },
+      GB: { name: "United Kingdom", code: "+44", timezone: "Europe/London", regions: ["London area", "Manchester area", "Birmingham area"], carriers: ["EE", "O2", "Vodafone"], national: "020 7946 0958" },
+      AE: { name: "United Arab Emirates", code: "+971", timezone: "Asia/Dubai", regions: ["Dubai area", "Abu Dhabi area"], carriers: ["du", "Etisalat"], national: "050 123 4567" },
+      AU: { name: "Australia", code: "+61", timezone: "Australia/Sydney", regions: ["New South Wales", "Victoria", "Queensland"], carriers: ["Telstra", "Optus", "Vodafone"], national: "0412 345 678" }
+    };
+
+    const DEMO_LOOKUPS = {
+      "919876543210": { country: "IN", carrier: "Jio", lineType: "Mobile", region: "Jharkhand · broad signal", confidence: 96, risk: 8 },
+      "12025550128": { country: "US", carrier: "T-Mobile", lineType: "Mobile", region: "Washington area · broad signal", confidence: 99, risk: 5 },
+      "442079460958": { country: "GB", carrier: "BT / EE", lineType: "Fixed line", region: "London area · broad signal", confidence: 93, risk: 12 }
+    };
+
+    function hashString(value) {
+      let hash = 0;
+      for (let i = 0; i < value.length; i += 1) hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
+      return Math.abs(hash);
+    }
+
+    function onlyDigits(value) { return String(value || "").replace(/\D/g, ""); }
+
+    function detectCountry(raw) {
+      const digits = onlyDigits(raw);
+      if (countrySelect.value !== "auto") return countrySelect.value;
+      if (digits.startsWith("91")) return "IN";
+      if (digits.startsWith("1")) return "US";
+      if (digits.startsWith("44")) return "GB";
+      if (digits.startsWith("971")) return "AE";
+      if (digits.startsWith("61")) return "AU";
+      return "IN";
+    }
+
+    function normalizeInput(raw, country) {
+      const value = String(raw || "").trim();
+      if (value.startsWith("+")) return `+${onlyDigits(value)}`;
+      const digits = onlyDigits(value);
+      const info = COUNTRY_DATA[country];
+      if (!info) return `+${digits}`;
+      return `+${digits.startsWith(info.code.replace("+", "")) ? digits : info.code.replace("+", "") + digits}`;
+    }
+
+    function showToast(message, isError = false) {
+      toast.textContent = message;
+      toast.classList.toggle("error", isError);
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 4200);
+    }
+
+    function setText(selector, value) { const node = $(selector); if (node) node.textContent = value; }
+
+    function setMetric(selector, value, footSelector, foot, tone = "") {
+      const node = $(selector);
+      node.textContent = value;
+      node.classList.remove("waiting");
+      if (tone) node.style.color = `var(--${tone})`;
+      setText(footSelector, foot);
+    }
+
+    function setLoading(isLoading) {
+      scanButton.disabled = isLoading;
+      scanButton.classList.toggle("loading", isLoading);
+      scanButton.querySelector("span").textContent = isLoading ? "Analysing…" : "Run analysis";
+    }
+
+    function validate(raw) {
+      const digits = onlyDigits(raw);
+      if (!digits) return "Number enter kijiye.";
+      if (digits.length < 7) return "Number bahut chhota hai — country code ke saath try karein.";
+      if (digits.length > 15) return "E.164 format mein maximum 15 digits allowed hain.";
+      return "";
+    }
+
+    function makeDemoResult(raw) {
+      const error = validate(raw);
+      if (error) throw new Error(error);
+      const country = detectCountry(raw);
+      const info = COUNTRY_DATA[country];
+      const normalized = normalizeInput(raw, country);
+      const digits = onlyDigits(normalized);
+      const known = DEMO_LOOKUPS[digits];
+      const seed = hashString(digits + country);
+      const carrier = known?.carrier || info.carriers[seed % info.carriers.length];
+      const lineTypes = ["Mobile", "Mobile", "VoIP / virtual", "Fixed line"];
+      const lineType = known?.lineType || lineTypes[seed % lineTypes.length];
+      const region = known?.region || `${info.regions[seed % info.regions.length]} · broad signal`;
+      const confidence = known?.confidence || 86 + (seed % 12);
+      const risk = known?.risk || 7 + (seed % 27);
+      return {
+        isLive: false,
+        valid: true,
+        normalized,
+        country: info.name,
+        countryCode: country,
+        countryPrefix: info.code,
+        carrier,
+        lineType,
+        region,
+        timezone: info.timezone,
+        national: info.national,
+        confidence,
+        risk,
+        source: "Local demo core",
+        status: "SIMULATED",
+        latency: 88 + (seed % 70),
+        format: "E.164 / valid"
+      };
+    }
+
+    async function fetchLiveResult(raw) {
+      const error = validate(raw);
+      if (error) throw new Error(error);
+      if (!LIVE_API_KEY.trim()) throw new Error("Live API key missing hai. Pehle API CONFIG mein LIVE_API_KEY add karein, ya Demo mode use karein.");
+      const normalized = normalizeInput(raw, detectCountry(raw));
+      const url = `${LIVE_API_BASE}?api_key=${encodeURIComponent(LIVE_API_KEY.trim())}&phone=${encodeURIComponent(normalized)}`;
+      const response = await fetch(url, { method: "GET", headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`Live provider error (${response.status}). API key, CORS aur endpoint check karein.`);
+      const data = await response.json();
+      const digits = onlyDigits(normalized);
+      const countryCode = data.country?.code || data.country_code || detectCountry(raw);
+      const info = COUNTRY_DATA[countryCode] || COUNTRY_DATA.IN;
+      const confidence = data.valid === false ? 22 : 94;
+      const risk = data.valid === false ? 78 : 9;
+      return {
+        isLive: true,
+        valid: data.valid !== false,
+        normalized: data.international_format || data.phone || normalized,
+        country: data.country?.name || data.country || info.name,
+        countryCode,
+        countryPrefix: data.country?.prefix || data.country_prefix || info.code,
+        carrier: data.carrier || "Not supplied",
+        lineType: data.line_type || data.type || "Not supplied",
+        region: data.location ? `${data.location} · provider signal` : "Broad region not supplied",
+        timezone: Array.isArray(data.timezone) ? data.timezone[0] : (data.timezone || info.timezone),
+        national: data.local_format || info.national,
+        confidence,
+        risk,
+        source: "AbstractAPI live",
+        status: "LIVE RESPONSE",
+        latency: 0,
+        format: data.valid === false ? "Format / validation failed" : "E.164 / provider validated",
+        providerDigits: digits
+      };
+    }
+
+    function showOverview(result) {
+      $("#emptyOverview").classList.add("hidden");
+      $("#overviewContent").classList.remove("hidden");
+      setText("#resultNumber", result.normalized);
+      setText("#resultCountry", `${result.country} (${result.countryPrefix})`);
+      setText("#resultCarrier", result.carrier);
+      setText("#resultLineType", result.lineType);
+      setText("#resultRegion", result.region);
+      setText("#resultTimezone", result.timezone);
+      setText("#resultSource", result.source);
+      const badge = $("#verifiedBadge");
+      badge.classList.toggle("warn", !result.valid);
+      badge.querySelector("span").textContent = result.valid ? (result.isLive ? "LIVE VALIDATED" : "DEMO VALIDATED") : "REVIEW SIGNAL";
+    }
+
+    function showRisk(result) {
+      const riskColor = result.risk >= 55 ? "red" : result.risk >= 30 ? "yellow" : "green";
+      const riskTitle = result.risk >= 55 ? "Review required" : result.risk >= 30 ? "Moderate signal" : "Low concern signal";
+      const riskDescription = result.risk >= 55 ? "Validation consistency low hai. Is signal ko identity proof na samjhein." : result.risk >= 30 ? "Kuch consistency checks manual review maang sakte hain." : "Format aur network signals aligned dikh rahe hain — still not a person-level verdict.";
+      $("#riskGauge").style.setProperty("--score", `${Math.max(3, result.risk)}%`);
+      $("#riskGauge").style.background = `conic-gradient(var(--${riskColor}) ${Math.max(3, result.risk)}%, rgba(255,255,255,.08) 0)`;
+      setText("#riskScore", result.risk);
+      setText("#riskTitle", riskTitle);
+      setText("#riskDescription", riskDescription);
+      setText("#riskUpdated", result.isLive ? "LIVE / NOW" : "DEMO / NOW");
+    }
+
+    function showMetrics(result, elapsed) {
+      const confidenceTone = result.confidence >= 90 ? "green" : "yellow";
+      const riskTone = result.risk >= 55 ? "red" : result.risk >= 30 ? "yellow" : "green";
+      setMetric("#metricConfidence", `${result.confidence}%`, "#metricConfidenceFoot", result.isLive ? "Provider confidence proxy" : "Synthetic learning signal", confidenceTone);
+      setMetric("#metricRisk", `${result.risk}/100`, "#metricRiskFoot", result.risk < 30 ? "Low concern signal" : "Manual review recommended", riskTone);
+      setMetric("#metricCarrier", result.carrier, "#metricCarrierFoot", result.isLive ? "Live provider field" : "Demo provider field", "cyan");
+      setMetric("#metricLatency", `${elapsed}ms`, "#metricLatencyFoot", result.isLive ? "Network round trip" : "Local simulation", "cyan");
+    }
+
+    function showMetadata(result) {
+      setText("#metaFormat", result.format);
+      setText("#metaCountryCode", `${result.countryCode} · ${result.countryPrefix}`);
+      setText("#metaNational", result.national);
+      setText("#metaConfidence", `${result.confidence}% match`);
+      setText("#metaStatus", result.status);
+      const values = {
+        format: Math.min(99, Math.max(35, result.confidence + 1)),
+        network: Math.min(99, Math.max(28, result.confidence - 4)),
+        risk: Math.min(99, Math.max(10, 100 - result.risk)),
+        source: result.isLive ? 96 : 84
+      };
+      Object.entries(values).forEach(([key, value]) => { setText(`#bar${key[0].toUpperCase()}${key.slice(1)}Value`, `${value}%`); $(`#bar${key[0].toUpperCase()}${key.slice(1)}`).style.width = `${value}%`; });
+    }
+
+    async function runAnalysis() {
+      const raw = input.value;
+      const error = validate(raw);
+      if (error) { showToast(error, true); input.focus(); return; }
+      setLoading(true);
+      const started = performance.now();
+      try {
+        let result;
+        if (modeSelect.value === "live") result = await fetchLiveResult(raw);
+        else { await new Promise(resolve => setTimeout(resolve, 540)); result = makeDemoResult(raw); }
+        const elapsed = Math.max(48, Math.round(performance.now() - started));
+        result.latency = elapsed;
+        lastResult = result;
+        showOverview(result);
+        showRisk(result);
+        showMetrics(result, elapsed);
+        showMetadata(result);
+        setText("#resultCount", result.isLive ? "1 LIVE RESULT" : "1 DEMO RESULT");
+        showToast(result.isLive ? "Live provider response received." : "Demo signal decoded locally.");
+      } catch (errorObject) {
+        showToast(errorObject.message || "Analysis failed. Please try again.", true);
+      } finally { setLoading(false); }
+    }
+
+    function updateModeNote() {
+      if (modeSelect.value === "live") {
+        setText("#modeNote", LIVE_API_KEY.trim() ? "Live provider request · key is visible in front-end" : "Live mode selected · add API key in API CONFIG below");
+      } else setText("#modeNote", "Privacy-safe simulation · no data leaves this browser");
+    }
+
+    function init() {
+      const session = `NXS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      setText("#sessionId", session);
+      setText("#localTime", new Intl.DateTimeFormat("en-IN", { hour: "2-digit", minute: "2-digit" }).format(new Date()));
+      setText("#apiKeyMask", LIVE_API_KEY ? '"••••••••••••"' : '""');
+      modeSelect.addEventListener("change", updateModeNote);
+      scanButton.addEventListener("click", runAnalysis);
+      input.addEventListener("keydown", (event) => { if (event.key === "Enter") runAnalysis(); });
+      $$(".chip").forEach(chip => chip.addEventListener("click", () => { input.value = chip.dataset.number; input.focus(); }));
+      $("#helpButton").addEventListener("click", () => showToast("Demo mode safe hai: sample number run karein, phir metadata layers compare karein. Live mode ke liye API CONFIG follow karein."));
+      $("#menuToggle").addEventListener("click", () => $("#sidebar").classList.toggle("open"));
+      $$(".nav-link").forEach(link => link.addEventListener("click", () => $("#sidebar").classList.remove("open")));
+      updateModeNote();
+    }
+    init();
+  </script>
+</body>
+</html>
